@@ -1,0 +1,122 @@
+.data
+	pulaLinha: .asciiz "\n"
+	menos: .asciiz "-"
+	mais: .asciiz "+"
+	zero: .float 0.0
+	plus: .word 0x7F800000
+	minus: .word 0xFF800000
+	NotaN: .word 0x7FBFFFFF
+	Exp0: .word -127
+	ExpEspecial: .word 128
+.text
+
+main:
+	# Leitura do float
+	jal lerFloat
+	mov.s $f1, $f0
+	
+	
+	jal imprimeFloat
+	jal imprimeSinal
+	jal calcExpoente
+	j exit
+	
+lerFloat:
+	li $v0, 6
+	syscall
+	jr $ra
+	
+imprimeFloat:
+	li $v0, 2
+	mov.s $f12, $f1
+	syscall
+	j _pulaLinha
+	jr $ra
+	
+_pulaLinha:
+
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	jr $ra
+
+imprimeSinal:
+	lwc1 $f2, zero
+	c.lt.s $f1, $f2
+	bc1t negativo
+	bc1f positivo
+	
+negativo:
+
+	li $v0, 4
+	la $a0, menos
+	syscall
+	
+	j _pulaLinha
+	
+positivo:
+
+	li $v0, 4
+	la $a0, mais
+	syscall
+	j _pulaLinha	
+	
+calcExpoente:
+	cvt.w.s $f3, $f1
+	la $s1, plus   #load inf
+	la $s2, minus  # load -inf
+	la $s3, NotaN    # load NaN
+	lwc1 $f5, 0($s1) # $f5 = inf
+	lwc1 $f6, 0($s2) # $f6 = -inf
+	lwc1 $f7, 0($s3) # $f7 = NaN
+	
+	mfc1 $t0, $f3 #t0 (int)input
+	li $t2, 0 #$t2 = resultado do expoente
+	beqz $t0, imprimeExp0
+	c.eq.s $f1, $f5
+	bc1t imprimeExpEspecial
+	c.eq.s $f1, $f6
+	bc1t imprimeExpEspecial
+	c.eq.s $f1, $f7
+	bc1t imprimeExpEspecial
+	
+	
+	j divide_2
+	
+divide_2:
+	
+	div $t1, $t0, 2 #dividir $t0 por 2 e guardar o quociente em $t1
+	beq $t1, 0, imprimeExp # se o quociente for igual a 0 significa que pode sair
+	div $t0, $t0, 2
+      	addi $t2, $t2, 1  
+	j divide_2
+
+imprimeExp:
+
+	li $v0, 1
+	move $a0, $t2
+	syscall
+	
+	j _pulaLinha
+	
+imprimeExp0:
+	lw $t4, Exp0
+	li $v0, 1
+	move $a0, $t4
+	syscall
+	
+	j _pulaLinha
+	
+imprimeExpEspecial:
+
+	#lw $t4, ExpEspecial
+	li $v0, 1
+	lw $a0, ExpEspecial
+	syscall
+	
+	j _pulaLinha
+	
+exit:	
+	
+	li $v0, 10
+	syscall

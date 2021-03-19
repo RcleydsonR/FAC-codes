@@ -1,0 +1,183 @@
+.data
+	pulaLinha: .asciiz "\n"
+	r_add: .asciiz "ADD: "
+	r_sub: .asciiz "SUB: "
+	r_and: .asciiz "AND: "
+	r_or: .asciiz "OR: "
+	r_xor: .asciiz "XOR: "
+	r_mask: .asciiz "MASK: "
+	r_sll: .asciiz "SLL("
+	r_srl: .asciiz "SRL("
+	parenteses: .asciiz "): "
+.text
+
+main:
+	# Leitura do inteiro 'a'
+	li $v0, 5
+	syscall
+	move $s0, $v0
+	
+	# Leitura do inteiro 'b'
+	li $v0, 5
+	syscall	
+	move $s1, $v0
+	
+	# Leitura do inteiro 'c'
+	li $v0, 5
+	syscall	
+	move $s2, $v0
+
+	# Indo para etapa de aritmeticas
+	jal add_sub
+		
+add_sub:
+	add $t0, $s0, $s1 # $t0 = a + b;
+	sub $t1, $s0, $s1 # $t1 = a - b;
+	#Indo para operacoes logicas basicas
+	
+	j op_logicas
+	
+op_logicas:
+	
+	and $t2, $s0, $s1 # $t2 = a AND b
+	or $t3, $s0, $s1  # $t3 = a OR b
+	xor $t4, $s0, $s1 # $t4 = a XOR b
+	
+	j mask
+	
+mask:
+	and $t5, $s2, 31 # chamamos essa operação de máscara entre c e 31, e denotaremos por m
+	
+	j desloc
+	
+desloc:
+	sllv $t6, $s0, $t5 # $t6 = a deslocado a esquerda m vezes
+	srlv $t7, $s1, $t5 # $t6 = b deslocado a direita m vezes
+	
+	j resposta
+ 	
+resposta:
+	# Resposta adição
+	li $v0, 4
+	la $a0, r_add
+	syscall
+	
+ 	li $v0, 1
+	move $a0, $t0
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta subtração
+	li $v0, 4
+	la $a0, r_sub
+	syscall
+	
+	li $v0, 1
+	move $a0, $t1
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta And
+	li $v0, 4
+	la $a0, r_and
+	syscall
+	
+	li $v0, 1
+	move $a0, $t2
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta or
+	li $v0, 4
+	la $a0, r_or
+	syscall
+	
+	li $v0, 1
+	move $a0, $t3
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta xor
+	li $v0, 4
+	la $a0, r_xor
+	syscall
+	
+	li $v0, 1
+	move $a0, $t4
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta mask
+	li $v0, 4
+	la $a0, r_mask
+	syscall
+	
+	li $v0, 1
+	move $a0, $t5
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta sll
+	li $v0, 4
+	la $a0, r_sll
+	syscall
+	
+	li $v0, 1
+	move $a0, $t5
+	syscall
+	
+	li $v0, 4
+	la $a0, parenteses
+	syscall
+	
+	li $v0, 1
+	move $a0, $t6
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Resposta srl
+	li $v0, 4
+	la $a0, r_srl
+	syscall
+	
+	li $v0, 1
+	move $a0, $t5
+	syscall
+	
+	li $v0, 4
+	la $a0, parenteses
+	syscall
+	
+	li $v0, 1
+	move $a0, $t7
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Encerrando o programa
+	
+	li   $v0, 10          
+  	syscall

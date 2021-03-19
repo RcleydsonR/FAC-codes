@@ -1,0 +1,35 @@
+.data
+	pulaLinha: .asciiz "\n"
+.text
+
+main:
+	# Lendo a capacidade da cabine
+	li $v0, 5
+	syscall
+	move $t0, $v0
+	
+	# Lendo o numero total de alunos da turma
+	li $v0, 5
+	syscall	
+	move $t1, $v0
+	
+	# Fazendo a divisão e salvando o resto no $t4
+	sub $t2, $t0, 1
+	div $t3, $t1, $t2
+	mfhi $t4
+	jal resposta
+		
+resposta:
+	slt $t5, $zero, $t4 # Se o resto for maior que 0, t5 recebe 1, se for igual ele recebe 0
+ 	add $t3, $t3, $t5 
+ 	
+ 	li $v0, 1
+	move $a0, $t3
+	syscall
+	
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	li   $v0, 10          
+  	syscall

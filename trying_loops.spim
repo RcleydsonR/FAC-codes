@@ -1,0 +1,26 @@
+# criando o array save
+.data
+# save: .word 0, 0, 0, 0, 0, 1
+
+# atribuído valores e endereços para i, k e save
+.text
+li $t0, 15       # k = $s5 = 0
+li $t1, 2       # i = $s3 = 0
+li $t3, 0
+# la $s6, save    # carregando o endereço de save no registrador $s6
+
+# criando o LOOP
+LOOP:
+	div $t0, $t1
+	mflo $t2
+	beq $t2, 1, EXIT
+	sub $t0, $t0, $t2
+      	addi $t3, $t3, 1       
+      	j LOOP                 
+      	
+EXIT:
+
+	li $v0, 1
+	move $a0, $t3
+	syscall
+	

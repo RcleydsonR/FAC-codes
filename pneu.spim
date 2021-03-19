@@ -1,0 +1,29 @@
+.data
+	pulaLinha: .asciiz "\n"
+.text
+main:
+	#Lê a pressão desejada
+	li $v0, 5
+	syscall
+	move $t0, $v0 # $t0 recebe a leitura da pressão desejada
+	
+	#Identifica a pressão presente
+	li $v0, 5
+	syscall
+	move $t1, $v0 # $t1 recebe a leitura da pressão presente
+	
+	# Calcula a pressão necessária pra atingir a pressão desejada
+	sub $t0, $t0, $t1
+	
+	# Printa a diferença entre as pressões
+	li $v0, 1
+	move $a0, $t0
+	syscall
+	# Printa uma quebra de Linha
+	li $v0, 4
+	la $a0, pulaLinha
+	syscall
+	
+	# Encerra o Programa
+	li $v0, 10
+	syscall
