@@ -1,0 +1,191 @@
+.data
+	pulaLinha: .asciiz ".\n"
+	
+	msg1: .asciiz "A exponencial modular "
+	msg2: .asciiz " elevado a "
+	msg3: .asciiz " (mod "
+	msg4: .asciiz ") eh "
+
+	err_EntradaInvalida: .asciiz "Entradas invalidas.\n"
+	err_ModuloNaoPrimo: .asciiz "O modulo nao eh primo.\n"
+.text
+main:
+	jal leitura
+	jal validaNum
+	
+	jal verificaPrimalidade
+
+	jal expModular
+
+leitura:
+	li $v0, 5 # leitura de inteiro 1
+	syscall
+	la $t1, 0($v0) # $t1 = n1
+
+	li $v0, 5 # leitura de inteiro 2
+	syscall
+	la $t2, 0($v0) # $t2 = n2 = expoente
+
+	li $v0, 5 # leitura de inteiro 3
+	syscall 
+	la $t3, 0($v0) # $t3 = n3 = modulo
+	
+	
+	jr $ra
+
+validaNum:
+	li $t0, 65535 # condição de número máximo.
+	
+	# valida n1
+	blez $t1, exitErrorEntrada 
+	bgt $t1, $t0, exitErrorEntrada
+	
+	# valida n2
+	blez $t2, exitErrorEntrada 
+	bgt $t2, $t0, exitErrorEntrada
+
+	# valida n3
+	blez $t3, exitErrorEntrada 
+	bgt $t3, $t0, exitErrorEntrada
+	
+	beq $t3, 1, exitErroNaoPrimo #n3 não pode ser igual 1, caso seja, sair do programa.
+
+
+	jr $ra 
+
+
+verificaPrimalidade:
+	li $a2, 2 # contador a2
+
+	# Calculando raiz quadrada do n3
+	mtc1 $t3, $f12
+	cvt.s.w $f12, $f12
+	sqrt.s $f0, $f12
+	
+	cvt.w.s $f0, $f0
+	mfc1 $a1, $f0
+	
+loopPrimalidade:
+	bgt $a2, $a1, retornaMain # se a2 for maior que a1, significa que o numero eh primo
+
+	rem $a3, $t3, $a2
+	beqz $a3, exitErroNaoPrimo # se o resto do modulo/a2 for = 0, erro de numero não primo
+
+	addi $a2, $a2, 1 # incrementa o contador a2
+	j loopPrimalidade
+
+
+expModular:
+	move $a1, $t1 # a1 = n1
+	move $a2, $t2 # a2 = n2
+
+	li $t7, 1 # $t7 = resultado da exponenciacao modular
+	
+loopExponenciacao:
+	blez $a2, mostraResultado 
+
+	rem $a3, $a2, 2 
+	beqz $a3, ifModuloZero 
+
+	# else modulo != 0
+	move $s6, $t7 
+	jal trataOverflow
+	
+	move $t7, $s7
+	addi $a2, $a2, -1 
+	j loopExponenciacao
+
+ifModuloZero:
+	move $s6, $a1 
+	jal trataOverflow
+
+	move $a1, $s7
+	div $a2, $a2, 2
+	j loopExponenciacao
+
+
+trataOverflow: 
+	move $s0, $zero
+	move $s7, $zero
+
+	rem $s5, $a1, $t3 
+
+calc:
+	blez $s6, resultadoOverflow
+	
+	rem $s3, $s6, 2
+	bne $s3, 1, continuaOverflow
+
+	add $s7, $s7, $s5 
+	rem $s7, $s7, $t3 
+	
+continuaOverflow:
+	mul $s5, $s5, 2 
+	rem $s5, $s5, $t3 
+	
+	div $s6, $s6, 2
+	j calc
+
+resultadoOverflow:
+	rem $s7, $s7, $t3 
+
+retornaMain:
+	jr $ra
+
+mostraResultado:
+	li $v0, 4
+	la, $a0, msg1
+	syscall
+
+	li $v0,1 
+	la $a0,($t1)
+	syscall
+
+	li $v0, 4
+	la, $a0, msg2
+	syscall
+
+	li $v0,1
+	la $a0,($t2)
+	syscall
+
+	li $v0, 4
+	la, $a0, msg3
+	syscall
+
+	li $v0,1 
+	la $a0,($t3) 
+	syscall
+
+	li $v0, 4
+	la, $a0, msg4
+	syscall
+
+	li $v0, 1
+	la $a0, ($t7) # $t7 = resposta
+	syscall
+
+	li $v0, 4
+	la, $a0, pulaLinha
+	syscall
+	
+	j exit # saida do programa
+	
+exitErrorEntrada:
+
+	li $v0, 4
+	la, $a0, err_EntradaInvalida # mensagem de entrada inválida
+	syscall
+
+	j exit # saida do programa
+	
+exitErroNaoPrimo:
+	li $v0, 4
+	la, $a0, err_ModuloNaoPrimo # mensagem de numero nao primo
+	syscall
+	
+	j exit # saida do programa
+
+exit:
+	li $v0, 10
+	syscall

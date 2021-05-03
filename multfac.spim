@@ -1,0 +1,55 @@
+multfac:
+   	move $s1, $0      # s1 = futuro lo
+   	move $s2, $0      # s2 = futuro hi  
+   	move $t1, $a0	  # t1 e t2 = instrumentos de comparação posterior
+   	move $t2, $a1
+    
+    	beq $a0, $0, terminado
+   	beq $a1, $0, terminado
+  	
+	move $s3, $0 # extender o multiplicando para 64 bits
+	
+	# Transformando os números lidos em positivo
+	abs $a0, $a0	
+	abs $a1, $a1	
+
+loop:
+   	andi $t0, $a0, 1    
+   	beq $t0, $0, continua   
+   	addu $s1, $s1, $a1  
+   	sltu $t0, $s1, $a1  
+   	addu $s2, $s2, $t0  
+   	addu $s2, $s2, $s3  
+   	
+continua:
+    
+   	srl $t0, $a1, 31    
+   	sll $a1, $a1, 1
+   	sll $s3, $s3, 1
+   	addu $s3, $s3, $t0
+
+   	srl $a0, $a0, 1 
+   	bne $a0, $0, loop
+	
+   	bltz $t1, negativo_1 # verifica se o num 1 é negativo
+   	bltz $t2, negativo_2 # verifica se o num 2 é negativo
+   	
+terminado:	
+	#encerra a função multfac
+	mtlo $s1
+	mthi $s2
+	jr $ra
+
+negativo_1:
+	bltz $t2, terminado # se o num 1 for negativo, verifica se o num 2 também é
+	neg $s1, $s1
+	neg $s2, $s2
+	addi $s2, $s2, -1
+	j terminado
+
+negativo_2:
+	bltz $t1, terminado # se o num 2 for negativo, verifica se o num 1 também é
+	neg $s1, $s1
+	neg $s2, $s2
+	addi $s2, $s2, -1
+	j terminado
